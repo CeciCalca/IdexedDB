@@ -1,10 +1,12 @@
-import {useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import Form from 'react-bootstrap/Form';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container'
 import { CardBody, CardFooter } from 'react-bootstrap';
+
+import blobImage from './test_image.txt';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
@@ -21,7 +23,7 @@ function App() {
     const indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 
   // Open (or create) the database
-    const request = indexedDB.open("MessagesDatabase", 3);
+    const request = indexedDB.open("TellOfflineDatabase", 3);
 
   request.onerror = event => {
     console.error('An Error has ocurred with IndexDB', event.error);
@@ -32,17 +34,39 @@ function App() {
       let db = event.target.result
      
       //create object store
-      let objectStore = db.createObjectStore("messageStore", {keyPath: "id"});
+      if (!db.objectStoreNames.contains('participantData')){
+      db.createObjectStore("participantData", {keyPath: "id"});
+      };
+      if (!db.objectStoreNames.contains('examinerData')){
+      db.createObjectStore("examinerData", {keyPath: "id"});
+      };
+      if (!db.objectStoreNames.contains('protocolsData')){
+      db.createObjectStore("protocolsData", {keyPath: "id"});
+      };
+      if (!db.objectStoreNames.contains('responsesData')){
+      db.createObjectStore("responsesData", {keyPath: "id"});
+      };
   };
+
+
 
 
   request.onsuccess = event => {
     let db = event.target.result;
-    const transaction = db.transaction('messageStore' , 'readwrite');
-    const store = transaction.objectStore('messageStore');
-    store.put({ id: 0 , text:'test first message'});
-    
-    console.log('TEST MESSAGEGE ADDED SUCCESSFULLY', store.get(0));
+    const partTX = db.transaction('participantData' , 'readwrite');
+    const examTX = db.transaction('examinerData' , 'readwrite');
+    const protTX = db.transaction('protocolsData' , 'readwrite');
+    const resTX = db.transaction('responsesData' , 'readwrite');
+
+
+    let participant = partTX.objectStore('participantData')
+    participant.put({id: 1 , name: "Pepe", last: "Pompin"})
+    let examiner = examTX.objectStore('examinerData');
+    examiner.put({id: 1, name: "Roberto", last: "Garcia"});
+    let protocol = protTX.objectStore('protocolsData');
+    protocol.put({id: 1 , type: "image", file: blobImage});
+    let response = resTX.objectStore('responsesData');
+    response.put({id: 1 , part_id: 1, res: "test de guardado de texto"})
 
   };
 
